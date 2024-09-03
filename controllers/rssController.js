@@ -12,21 +12,34 @@ const parser = new Parser();
 
 
 
+
 export const addRSSFeed = async (req, res) => {
     try {
         const { url } = req.body;
 
-        // Fetch the URL content
-        const response = await axios.get(url);
-        
-        // Check if the response status is OK and data exists
-        if (response.status !== 200 || !response.data) {
-            return res.status(400).json({ message: 'Invalid RSS feed' });
+        // Check if the URL is already in the database
+        const existingFeed = await RSSFeed.findOne({ url });
+        if (existingFeed) {
+            return res.status(400).json({ message: 'RSS feed URL already exists' });
         }
 
-        // Parse the response data
-        const feed = await parser.parseString(response.data);
-        
+        // Fetch the URL content
+        const response = await axios.get(url);
+
+        // Check if the response status is OK and data exists
+        if (response.status !== 200 || !response.data) {
+            return res.status(400).json({ message: 'Invalid RSS feed url' });
+        }
+
+        // Parse the RSS feed
+        let feed;
+        try {
+            feed = await parser.parseString(response.data);
+        } catch (parseError) {
+            console.error('Error parsing RSS feed:', parseError);
+            return res.status(400).json({ message: 'Invalid RSS feed format' });
+        }
+
         // Validate the RSS feed by checking essential elements
         if (!feed || !feed.feed || !feed.items || !feed.feed.title) {
             return res.status(400).json({ message: 'Invalid RSS feed format' });
@@ -38,10 +51,10 @@ export const addRSSFeed = async (req, res) => {
 
         res.status(201).json({ message: 'RSS feed added successfully', feed: newFeed });
     } catch (error) {
-        console.error('Error adding RSS feed:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
+
 
 
 
