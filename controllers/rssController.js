@@ -10,24 +10,39 @@ import {Setting} from '../models/Setting.js';
 const openaiApiKey = process.env.OPENAI_API_KEY;
 const parser = new Parser();
 
+
+
 export const addRSSFeed = async (req, res) => {
     try {
         const { url } = req.body;
 
+        // Fetch the URL content
         const response = await axios.get(url);
+        
+        // Check if the response status is OK and data exists
         if (response.status !== 200 || !response.data) {
             return res.status(400).json({ message: 'Invalid RSS feed' });
         }
 
-        const feed = new RSSFeed({ url, valid: true });
-        await feed.save();
+        // Parse the response data
+        const feed = await parser.parseString(response.data);
+        
+        // Validate the RSS feed by checking essential elements
+        if (!feed || !feed.feed || !feed.items || !feed.feed.title) {
+            return res.status(400).json({ message: 'Invalid RSS feed format' });
+        }
 
-        res.status(201).json({ message: 'RSS feed added successfully', feed });
+        // Save the valid RSS feed to the database
+        const newFeed = new RSSFeed({ url, valid: true });
+        await newFeed.save();
+
+        res.status(201).json({ message: 'RSS feed added successfully', feed: newFeed });
     } catch (error) {
         console.error('Error adding RSS feed:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
+
 
 
 
