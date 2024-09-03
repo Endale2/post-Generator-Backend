@@ -5,11 +5,16 @@ dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export const authMiddleware = (req, res, next) => {
-  console.log('Cookies:', req.cookies); // Debugging
+  console.log('Headers:', req.headers); // Debugging
 
   try {
-    // Extract token from cookies
-    const token = req.cookies.accessToken;
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1]; // Get the token from the header
     if (!token) {
       return res.status(401).json({ message: 'No token provided' });
     }

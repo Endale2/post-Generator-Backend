@@ -56,38 +56,27 @@ export const login = async (req, res) => {
     const accessToken = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
     console.log('User authenticated, generating token');
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: true, // Only set secure cookies in production
-      sameSite: 'None', // Required for cross-origin cookies
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-    });
-
-    res.status(200).json({ message: 'Logged in successfully' });
+    // Send the access token in the response body
+    res.status(200).json({ accessToken, message: 'Logged in successfully' });
   } catch (err) {
     console.error('Error during login:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-
 export const logout = (req, res) => {
-  res.cookie('accessToken', '', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'None',
-    expires: new Date(0),
-  });
-
+  // Clear the token in the response body
   res.status(200).json({ message: 'Logged out successfully' });
 };
 
-
 export const getUser = async (req, res) => {
   try {
-    const token = req.cookies.accessToken; // Extract token from cookies
-    if (!token) return res.status(401).json({ message: 'No token provided' });
+    const { authorization } = req.headers; // Extract token from authorization header
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
 
+    const token = authorization.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET); // Verify token
     const user = await User.findById(decoded.userId).select('name email role'); // Fetch name, email, and role
 
