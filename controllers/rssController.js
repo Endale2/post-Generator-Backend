@@ -40,10 +40,7 @@ export const addRSSFeed = async (req, res) => {
             return res.status(400).json({ message: 'Invalid RSS feed format' });
         }
 
-        // Validate the RSS feed by checking essential elements
-        if (!feed || !feed.feed || !feed.items || !feed.feed.title) {
-            return res.status(400).json({ message: 'Invalid RSS feed format' });
-        }
+        
 
         // Save the valid RSS feed to the database
         const newFeed = new RSSFeed({ url, valid: true });
