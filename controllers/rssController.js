@@ -103,7 +103,21 @@ export const checkDailyScanStatus = async (req, res) => {
     }
   };
 
- 
+ // Delete all DailyScan data
+export const deleteAllDailyScans = async (req, res) => {
+    try {
+        const result = await DailyScan.deleteMany({}); // Delete all documents in the DailyScan collection
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ message: 'No DailyScan records found to delete.' });
+        }
+
+        return res.json({ message: `Successfully deleted ${result.deletedCount} DailyScan records.` });
+    } catch (error) {
+        console.error('Error deleting DailyScan records:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
   
 
 export const reloadArticles = async (req, res) => {
