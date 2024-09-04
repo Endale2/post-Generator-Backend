@@ -103,21 +103,23 @@ export const checkDailyScanStatus = async (req, res) => {
     }
   };
 
- // Delete all DailyScan data
-export const deleteAllDailyScans = async (req, res) => {
+// Delete today's DailyScan data
+export const deleteTodaysDailyScan = async (req, res) => {
     try {
-        const result = await DailyScan.deleteMany({}); // Delete all documents in the DailyScan collection
+        const today = new Date().setHours(0, 0, 0, 0); // Get today's date with the time set to midnight
+        const result = await DailyScan.deleteOne({ date: today }); // Delete the document with today's date
 
         if (result.deletedCount === 0) {
-            return res.status(404).json({ message: 'No DailyScan records found to delete.' });
+            return res.status(404).json({ message: 'No DailyScan record found for today to delete.' });
         }
 
-        return res.json({ message: `Successfully deleted ${result.deletedCount} DailyScan records.` });
+        return res.json({ message: 'Successfully deleted today\'s DailyScan record.' });
     } catch (error) {
-        console.error('Error deleting DailyScan records:', error);
+        console.error('Error deleting today\'s DailyScan record:', error);
         res.status(500).json({ error: 'Server error' });
     }
 };
+
   
 
 export const reloadArticles = async (req, res) => {
